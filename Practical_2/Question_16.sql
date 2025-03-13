@@ -1,2 +1,2 @@
 alter table instructor
-    modify column name VARCHAR(50);
+    modify name VARCHAR(50);
