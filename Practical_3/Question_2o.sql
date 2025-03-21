@@ -1,3 +1,3 @@
 SELECT SUM(budget) AS total_budget
-FROM builder
+FROM Department
 WHERE builder = 'Watson';
