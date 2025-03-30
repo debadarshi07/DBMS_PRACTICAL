@@ -1,2 +1,3 @@
-select * from Faculty_Info 
-where name like 'K%' and salary > 65000;
+SELECT *
+FROM Faculty_Info 
+WHERE name LIKE 'K%' AND salary > 65000;
