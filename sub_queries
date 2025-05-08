@@ -1,32 +1,38 @@
 -- 1. Customer details with Account_no "A0004"
-SELECT name, phone_no, cust_no 
+SELECT Customer.name, Customer.phone_no, Customer.cust_no 
 FROM Customer 
-WHERE account_no = 'A0004';
+JOIN Depositor ON Customer.cust_no = Depositor.cust_no 
+WHERE Depositor.account_no = 'A0004';
 
 -- 2. Customers who have not taken any loan
-SELECT name 
+SELECT Customer.name 
 FROM Customer 
-WHERE cust_no NOT IN (SELECT cust_no FROM Loan);
+WHERE Customer.cust_no NOT IN (SELECT Loan.cust_no FROM Loan);
 
 -- 3. Account details of customer with cust_no = "C0010"
-SELECT account_no, balance 
+SELECT Account.account_no, Account.balance 
 FROM Account 
-WHERE cust_no = 'C0010';
+JOIN Depositor ON Account.account_no = Depositor.account_no 
+WHERE Depositor.cust_no = 'C0010';
 
 -- 4. Branch city where "ASLESHA TIWARI" has taken a loan
-SELECT branch_city 
+SELECT Branch.branch_city 
 FROM Branch 
-WHERE branch_id IN (SELECT branch_id FROM Loan WHERE cust_no IN (SELECT cust_no FROM Customer WHERE name = 'ASLESHA TIWARI'));
+WHERE Branch.branch_code IN (SELECT Loan.branch_code FROM Loan 
+WHERE Loan.cust_no IN (SELECT Customer.cust_no FROM Customer WHERE Customer.name = 'ASLESHA TIWARI'));
 
 -- 5. Installment details of customer "ANKITA SINGH"
-SELECT installment_no, installment_amount 
+SELECT Installment.inst_no, Installment.inst_amount 
 FROM Installment 
-WHERE loan_no IN (SELECT loan_no FROM Loan WHERE cust_no IN (SELECT cust_no FROM Customer WHERE name = 'ANKITA SINGH'));
+WHERE Installment.loan_no IN (SELECT Loan.loan_no FROM Loan 
+WHERE Loan.cust_no IN (SELECT Customer.cust_no FROM Customer WHERE Customer.name = 'ANKITA SINGH'));
 
 -- 6. Branch name and city where "ABHIJIT MISHRA" has an account
-SELECT branch_name, branch_city 
+SELECT Branch.branch_name, Branch.branch_city 
 FROM Branch 
-WHERE branch_id IN (SELECT branch_id FROM Account WHERE cust_no IN (SELECT cust_no FROM Customer WHERE name = 'ABHIJIT MISHRA'));
+WHERE Branch.branch_code IN (SELECT Account.branch_code FROM Account 
+WHERE Account.account_no IN (SELECT Depositor.account_no FROM Depositor 
+WHERE Depositor.cust_no IN (SELECT Customer.cust_no FROM Customer WHERE Customer.name = 'ABHIJIT MISHRA')));
 
 -- 7. Create ACCOUNT_TYPE table
 CREATE TABLE ACCOUNT_TYPE (
@@ -36,30 +42,33 @@ CREATE TABLE ACCOUNT_TYPE (
 
 -- 8. Insert account no and type with balance < 50000
 INSERT INTO ACCOUNT_TYPE (ACCOUNT_NO, TYPE)
-SELECT account_no, type FROM Account WHERE balance < 50000;
+SELECT Account.account_no, Account.type 
+FROM Account 
+WHERE Account.balance < 50000;
 
 -- 9. Update account type to FD for cust_no "C0007"
 UPDATE ACCOUNT_TYPE 
 SET TYPE = 'FD' 
-WHERE ACCOUNT_NO IN (SELECT account_no FROM Account WHERE cust_no = 'C0007');
+WHERE ACCOUNT_NO IN (SELECT Account.account_no FROM Account 
+WHERE Account.account_no IN (SELECT Depositor.account_no FROM Depositor WHERE Depositor.cust_no = 'C0007'));
 
 -- 10. Delete accounts with balance < 20000
 DELETE FROM ACCOUNT_TYPE 
-WHERE ACCOUNT_NO IN (SELECT account_no FROM Account WHERE balance < 20000);
+WHERE ACCOUNT_NO IN (SELECT Account.account_no FROM Account WHERE Account.balance < 20000);
 
 -- 11. Accounts with balance greater than some FD accounts
-SELECT account_no 
+SELECT Account.account_no 
 FROM Account 
-WHERE balance > SOME (SELECT balance FROM Account WHERE type = 'FD');
+WHERE Account.balance > SOME (SELECT Account.balance FROM Account WHERE Account.type = 'FD');
 
 -- 12. Accounts with balance greater than all FD accounts
-SELECT account_no 
+SELECT Account.account_no 
 FROM Account 
-WHERE balance > ALL (SELECT balance FROM Account WHERE type = 'FD');
+WHERE Account.balance > ALL (SELECT Account.balance FROM Account WHERE Account.type = 'FD');
 
 -- 13. Branches where some loans are taken
 SELECT * FROM Branch 
-WHERE EXISTS (SELECT * FROM Loan WHERE Loan.branch_id = Branch.branch_id);
+WHERE EXISTS (SELECT * FROM Loan WHERE Loan.branch_code = Branch.branch_code);
 
 -- 14. Loans with no installments paid
 SELECT * FROM Loan 
@@ -71,4 +80,3 @@ SET balance = CASE
     WHEN balance > 80000 THEN balance * 1.06 
     ELSE balance * 1.05 
 END;
-
